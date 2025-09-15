@@ -21,20 +21,18 @@ const UNIT_MAP_SHEET = 'UnitMap';
 // Google Sheets authentication
 // Google Sheets authentication (prefers env var in production)
 async function getGoogleSheetsClient() {
-  const hasInlineCreds = !!process.env.GOOGLE_CREDENTIALS;
+  if (!process.env.GOOGLE_CREDENTIALS) {
+    throw new Error('GOOGLE_CREDENTIALS environment variable is required');
+  }
 
   const auth = new google.auth.GoogleAuth({
-    ...(hasInlineCreds
-      ? { credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS) } // Render / prod
-      : { keyFile: 'credentials.json' } // Local dev
-    ),
+    credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
     scopes: ['https://www.googleapis.com/auth/spreadsheets']
   });
 
   const authClient = await auth.getClient();
   return google.sheets({ version: 'v4', auth: authClient });
 }
-
 // Nutrient calculation functions
 function calculateVitaminD(foodCode, chocal, oh25d3) {
     // For food codes A001 to L004, use D2 directly
